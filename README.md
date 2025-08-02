@@ -11,3 +11,4 @@ small jump rope app for sg internal usage
 6. leaderboard w friends
 7. national records (pull from central database ?)
 8. maybe some comparison stuff also
+9. simplified rules
