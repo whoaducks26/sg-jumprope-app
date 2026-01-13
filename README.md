@@ -14,6 +14,6 @@ https://sg-jumprope-app.vercel.app/
 3. Able to create events, add users who are involved etc (i also havent done this)
 
 
-# notes
+### notes
 - ui everything i will fix (maybe.. i hope i do)
 - tbh idk
