@@ -12,3 +12,8 @@ https://sg-jumprope-app.vercel.app/
 1. Same as user
 2. I will manually update you as admin in my db so lmk when u create ur acc
 3. Able to create events, add users who are involved etc (i also havent done this)
+
+
+# notes
+- ui everything i will fix (maybe.. i hope i do)
+- tbh idk
