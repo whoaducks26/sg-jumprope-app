@@ -1,5 +1,4 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 export default function CreateEventModal({ onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -7,10 +6,19 @@ export default function CreateEventModal({ onClose, onSave }) {
     date: '',
     time: '',
     location: '',
-    description: ''
+    description: '',
+    category: 'workshop' // Default category
   });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const categories = [
+    { value: 'competition', label: '🏆 Competition', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'performance', label: '🎭 Performance', color: 'bg-purple-100 text-purple-800' },
+    { value: 'workshop', label: '🎓 Workshop', color: 'bg-blue-100 text-blue-800' },
+    { value: 'practice', label: '💪 Practice', color: 'bg-green-100 text-green-800' },
+    { value: 'other', label: '📌 Other', color: 'bg-gray-100 text-gray-800' }
+  ];
 
   const handleSubmit = async () => {
     // Validate form
@@ -33,7 +41,7 @@ export default function CreateEventModal({ onClose, onSave }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <h3 className="text-xl font-bold text-gray-900 mb-4">Create New Event</h3>
 
         <div className="space-y-4">
@@ -49,6 +57,29 @@ export default function CreateEventModal({ onClose, onSave }) {
               disabled={saving}
               placeholder="Weekly Practice Session"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {categories.map((cat) => (
+                <button
+                  key={cat.value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, category: cat.value })}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition ${
+                    formData.category === cat.value
+                      ? cat.color + ' ring-2 ring-offset-1 ring-blue-500'
+                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  }`}
+                  disabled={saving}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

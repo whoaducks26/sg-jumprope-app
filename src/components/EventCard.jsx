@@ -4,9 +4,24 @@ import { Users } from 'lucide-react';
 export default function EventCard({ event, currentUserName, onJoin, onLeave }) {
   const isParticipating = event.participants.includes(currentUserName);
 
+  const categoryStyles = {
+    competition: { label: '🏆 Competition', color: 'bg-yellow-100 text-yellow-800' },
+    performance: { label: '🎭 Performance', color: 'bg-purple-100 text-purple-800' },
+    workshop: { label: '🎓 Workshop', color: 'bg-blue-100 text-blue-800' },
+    practice: { label: '💪 Practice', color: 'bg-green-100 text-green-800' },
+    other: { label: '📌 Other', color: 'bg-gray-100 text-gray-800' }
+  };
+
+  const category = categoryStyles[event.category] || categoryStyles.other;
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition">
-      <h3 className="text-lg font-semibold text-gray-900 mb-2">{event.title}</h3>
+      <div className="flex items-start justify-between mb-2">
+        <h3 className="text-lg font-semibold text-gray-900 flex-1">{event.title}</h3>
+        <span className={`px-2 py-1 rounded text-xs font-medium ${category.color} whitespace-nowrap ml-2`}>
+          {category.label}
+        </span>
+      </div>
       
       <div className="space-y-2 text-sm text-gray-600 mb-4">
         <p>📅 {new Date(event.date).toLocaleDateString()} at {event.time}</p>
