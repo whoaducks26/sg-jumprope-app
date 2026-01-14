@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Settings, LogOut, User } from 'lucide-react';
+import { Calendar, Settings, LogOut, User, Users } from 'lucide-react';
 
 export default function Navbar({ user, isAdmin, view, setView, onLogout }) {
   return (
@@ -31,6 +31,19 @@ export default function Navbar({ user, isAdmin, view, setView, onLogout }) {
                 >
                   <Settings className="inline w-4 h-4 mr-1" />
                   Admin Panel
+                </button>
+              )}
+              {isAdmin && (
+                <button
+                  onClick={() => setView('users')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${
+                    view === 'users'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Users className="inline w-4 h-4 mr-1" />
+                  Users
                 </button>
               )}
               <button
