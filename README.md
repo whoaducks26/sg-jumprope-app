@@ -19,6 +19,7 @@ if u have reccs lmk <3
 - ui everything i will fix (maybe.. i hope i do)
 - everything above
 - change name/logo etc
+* if u want admin access to test lmk !
 
 
 ### installation guide (dev)
