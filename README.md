@@ -17,3 +17,18 @@ https://sg-jumprope-app.vercel.app/
 ### notes
 - ui everything i will fix (maybe.. i hope i do)
 - tbh idk
+
+
+### installation guide (dev)
+this is if ur cloning this into vscode etc & running locally
+1. npm install
+2. check for these files:
+  1. tailwind.config.js
+  2. postcss.config.js
+  3. vite.config.js
+3. create .env.local (contact me for file content)
+4. check css file has these:
+  @tailwind base;
+  @tailwind components;
+  @tailwind utilities;
+5. npm run dev
