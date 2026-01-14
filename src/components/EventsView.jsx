@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Filter, UserPlus } from 'lucide-react';
 import EventCard from './EventCard';
 import CreateEventModal from './CreateEventModal';
+import ManageParticipantsModal from './ManageParticipantsModal';
 
 export default function EventsView({
   events,
@@ -9,11 +10,16 @@ export default function EventsView({
   error,
   isAdmin,
   currentUserName,
+  currentUserId,
   onJoinEvent,
   onLeaveEvent,
-  onCreateEvent
+  onCreateEvent,
+  onAddParticipant,
+  onRemoveParticipant
 }) {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showMyEventsOnly, setShowMyEventsOnly] = useState(false);
+  const [selectedEventForManage, setSelectedEventForManage] = useState(null);
 
   const handleCreateEvent = async (eventData) => {
     const result = await onCreateEvent(eventData);
@@ -22,6 +28,11 @@ export default function EventsView({
     }
     return result;
   };
+
+  // Filter events based on toggle
+  const filteredEvents = showMyEventsOnly
+    ? events.filter(event => event.participants.some(p => p.id === currentUserId))
+    : events;
 
   if (loading) {
     return (
@@ -40,26 +51,48 @@ export default function EventsView({
     );
   }
 
-  // THIS PART WAS MISSING!
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Upcoming Events</h2>
-        {isAdmin && (
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">
+          {showMyEventsOnly ? 'My Events' : 'Upcoming Events'}
+        </h2>
+        
+        <div className="flex gap-2">
+          {/* Filter Toggle */}
           <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+            onClick={() => setShowMyEventsOnly(!showMyEventsOnly)}
+            className={`px-4 py-2 rounded-md flex items-center text-sm font-medium transition ${
+              showMyEventsOnly
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
           >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Event
+            <Filter className="w-4 h-4 mr-2" />
+            {showMyEventsOnly ? 'Show All Events' : 'My Events Only'}
           </button>
-        )}
+
+          {/* Create Event Button */}
+          {isAdmin && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Event
+            </button>
+          )}
+        </div>
       </div>
 
-      {events.length === 0 ? (
+      {filteredEvents.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg shadow-md">
-          <p className="text-gray-600">No events scheduled yet.</p>
-          {isAdmin && (
+          <p className="text-gray-600">
+            {showMyEventsOnly 
+              ? "You haven't joined any events yet." 
+              : "No events scheduled yet."}
+          </p>
+          {isAdmin && !showMyEventsOnly && (
             <button
               onClick={() => setShowCreateModal(true)}
               className="mt-4 text-blue-600 hover:text-blue-700"
@@ -70,14 +103,27 @@ export default function EventsView({
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {events.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              currentUserName={currentUserName}
-              onJoin={() => onJoinEvent(event.id)}
-              onLeave={() => onLeaveEvent(event.id)}
-            />
+          {filteredEvents.map((event) => (
+            <div key={event.id} className="relative">
+              <EventCard
+                event={event}
+                currentUserName={currentUserName}
+                currentUserId={currentUserId}
+                onJoin={() => onJoinEvent(event.id)}
+                onLeave={() => onLeaveEvent(event.id)}
+              />
+              
+              {/* Admin: Manage Participants Button */}
+              {isAdmin && (
+                <button
+                  onClick={() => setSelectedEventForManage(event)}
+                  className="absolute top-2 right-2 bg-white shadow-md hover:shadow-lg p-2 rounded-full text-gray-600 hover:text-blue-600 transition"
+                  title="Manage participants"
+                >
+                  <UserPlus className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}
@@ -86,6 +132,15 @@ export default function EventsView({
         <CreateEventModal
           onClose={() => setShowCreateModal(false)}
           onSave={handleCreateEvent}
+        />
+      )}
+
+      {selectedEventForManage && (
+        <ManageParticipantsModal
+          event={selectedEventForManage}
+          onClose={() => setSelectedEventForManage(null)}
+          onAddParticipant={onAddParticipant}
+          onRemoveParticipant={onRemoveParticipant}
         />
       )}
     </div>

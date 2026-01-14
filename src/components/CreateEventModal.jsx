@@ -4,39 +4,68 @@ export default function CreateEventModal({ onClose, onSave }) {
   const [formData, setFormData] = useState({
     title: '',
     date: '',
+    end_date: '',
     time: '',
     location: '',
     description: '',
-    category: 'workshop' // Default category
+    categories: []
   });
+  const [isMultiDay, setIsMultiDay] = useState(false);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const categories = [
-    { value: 'competition', label: '🏆 Competition', color: 'bg-yellow-100 text-yellow-800' },
-    { value: 'performance', label: '🎭 Performance', color: 'bg-purple-100 text-purple-800' },
-    { value: 'workshop', label: '🎓 Workshop', color: 'bg-blue-100 text-blue-800' },
-    { value: 'practice', label: '💪 Practice', color: 'bg-green-100 text-green-800' },
-    { value: 'other', label: '📌 Other', color: 'bg-gray-100 text-gray-800' }
+  const categoryOptions = [
+    { value: 'competition', label: '🏆 Competition', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
+    { value: 'performance', label: '🎭 Performance', color: 'bg-purple-100 text-purple-800 border-purple-300' },
+    { value: 'workshop', label: '🎓 Workshop', color: 'bg-blue-100 text-blue-800 border-blue-300' },
+    { value: 'training', label: '💪 Training', color: 'bg-green-100 text-green-800 border-green-300' },
+    { value: 'other', label: '📌 Other', color: 'bg-gray-100 text-gray-800 border-gray-300' }
   ];
 
+  const toggleCategory = (category) => {
+    setFormData(prev => ({
+      ...prev,
+      categories: prev.categories.includes(category)
+        ? prev.categories.filter(c => c !== category)
+        : [...prev.categories, category]
+    }));
+  };
+
   const handleSubmit = async () => {
-    // Validate form
     if (!formData.title || !formData.date || !formData.time || !formData.location || !formData.description) {
       setError('Please fill in all fields');
+      return;
+    }
+
+    if (isMultiDay && !formData.end_date) {
+      setError('Please select an end date for multi-day events');
+      return;
+    }
+
+    if (isMultiDay && new Date(formData.end_date) < new Date(formData.date)) {
+      setError('End date must be after start date');
+      return;
+    }
+
+    if (formData.categories.length === 0) {
+      setError('Please select at least one category');
       return;
     }
 
     setSaving(true);
     setError('');
 
-    const result = await onSave(formData);
+    const eventData = {
+      ...formData,
+      end_date: isMultiDay ? formData.end_date : formData.date
+    };
+
+    const result = await onSave(eventData);
     
     if (!result.success) {
       setError(result.error || 'Failed to create event');
       setSaving(false);
     }
-    // If successful, parent component will close modal
   };
 
   return (
@@ -60,19 +89,19 @@ export default function CreateEventModal({ onClose, onSave }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Categories (select multiple)
             </label>
             <div className="grid grid-cols-2 gap-2">
-              {categories.map((cat) => (
+              {categoryOptions.map((cat) => (
                 <button
                   key={cat.value}
                   type="button"
-                  onClick={() => setFormData({ ...formData, category: cat.value })}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition ${
-                    formData.category === cat.value
-                      ? cat.color + ' ring-2 ring-offset-1 ring-blue-500'
-                      : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  onClick={() => toggleCategory(cat.value)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition border-2 ${
+                    formData.categories.includes(cat.value)
+                      ? cat.color + ' border-current'
+                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
                   }`}
                   disabled={saving}
                 >
@@ -80,12 +109,17 @@ export default function CreateEventModal({ onClose, onSave }) {
                 </button>
               ))}
             </div>
+            {formData.categories.length > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.categories.length} category(ies) selected
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date
+                Start Date
               </label>
               <input
                 type="date"
@@ -108,6 +142,43 @@ export default function CreateEventModal({ onClose, onSave }) {
               />
             </div>
           </div>
+
+          {/* Multi-day toggle */}
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="multi-day"
+              checked={isMultiDay}
+              onChange={(e) => {
+                setIsMultiDay(e.target.checked);
+                if (!e.target.checked) {
+                  setFormData({ ...formData, end_date: '' });
+                }
+              }}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              disabled={saving}
+            />
+            <label htmlFor="multi-day" className="text-sm font-medium text-gray-700">
+              This is a multi-day event
+            </label>
+          </div>
+
+          {/* End date (only shown if multi-day) */}
+          {isMultiDay && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                End Date
+              </label>
+              <input
+                type="date"
+                value={formData.end_date}
+                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
+                min={formData.date}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled={saving}
+              />
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">

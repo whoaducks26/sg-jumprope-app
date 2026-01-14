@@ -6,7 +6,6 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
     authService.getSession().then(session => {
       if (session?.user) {
         loadUser();
@@ -15,7 +14,6 @@ export function useAuth() {
       }
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = authService.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
@@ -48,7 +46,6 @@ export function useAuth() {
     setLoading(true);
     try {
       await authService.signUp(email, password, name);
-      // Note: User needs to verify email before they can sign in
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
@@ -81,12 +78,18 @@ export function useAuth() {
     }
   };
 
+  // Add refresh function
+  const refreshUser = async () => {
+    await loadUser();
+  };
+
   return {
     user,
     loading,
     signUp,
     signIn,
     signOut,
+    refreshUser,
     isAdmin: user?.profile?.role === 'admin'
   };
 }

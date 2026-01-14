@@ -5,21 +5,13 @@ import LoginPage from './components/LoginPage';
 import Navbar from './components/NavBar';
 import EventsView from './components/EventsView';
 import AdminPanel from './components/AdminPanel';
+import ProfilePage from './components/ProfilePage';
 
 function App() {
-  const { user, loading: authLoading, signOut, isAdmin } = useAuth();
+  const { user, loading: authLoading, signOut, isAdmin, refreshUser } = useAuth();
   const events = useEvents();
   const [view, setView] = useState('events');
 
-   // ADD THIS DEBUG CODE
-  console.log('User:', user);
-  console.log('User Profile:', user?.profile);
-  console.log('Is Admin:', isAdmin);
-  console.log('Role:', user?.profile?.role);
-  // END DEBUG CODE
-
-
-  // Show loading spinner while checking authentication
   if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -31,10 +23,33 @@ function App() {
     );
   }
 
-  // Show login page if not authenticated
   if (!user) {
     return <LoginPage />;
   }
+
+  const handleAddParticipant = async (eventId, userId) => {
+    try {
+      const { eventService } = await import('./services/supabase');
+      await eventService.addParticipant(eventId, userId);
+      await events.refresh();
+      return { success: true };
+    } catch (err) {
+      console.error('Error adding participant:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
+  const handleRemoveParticipant = async (eventId, userId) => {
+    try {
+      const { eventService } = await import('./services/supabase');
+      await eventService.removeParticipant(eventId, userId);
+      await events.refresh();
+      return { success: true };
+    } catch (err) {
+      console.error('Error removing participant:', err);
+      return { success: false, error: err.message };
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -54,9 +69,12 @@ function App() {
             error={events.error}
             isAdmin={isAdmin}
             currentUserName={user.profile?.name}
+            currentUserId={user.id}
             onJoinEvent={events.joinEvent}
             onLeaveEvent={events.leaveEvent}
             onCreateEvent={events.createEvent}
+            onAddParticipant={handleAddParticipant}
+            onRemoveParticipant={handleRemoveParticipant}
           />
         )}
         
@@ -64,6 +82,13 @@ function App() {
           <AdminPanel 
             events={events.events}
             onDeleteEvent={events.deleteEvent}
+          />
+        )}
+
+        {view === 'profile' && (
+          <ProfilePage 
+            user={user}
+            onProfileUpdate={refreshUser}
           />
         )}
       </main>

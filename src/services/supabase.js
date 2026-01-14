@@ -10,7 +10,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // ============================================
 
 export const authService = {
-  // Sign up new user
   async signUp(email, password, name) {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -27,7 +26,6 @@ export const authService = {
     return data;
   },
 
-  // Sign in existing user
   async signIn(email, password) {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -38,27 +36,23 @@ export const authService = {
     return data;
   },
 
-  // Sign out
   async signOut() {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   },
 
-  // Get current session
   async getSession() {
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error) throw error;
     return session;
   },
 
-  // Get current user with profile
   async getCurrentUser() {
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error) throw error;
     
     if (!user) return null;
 
-    // Get user profile with role
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
@@ -71,9 +65,44 @@ export const authService = {
     };
   },
 
-  // Listen to auth state changes
   onAuthStateChange(callback) {
     return supabase.auth.onAuthStateChange(callback);
+  }
+};
+
+// ============================================
+// PROFILE FUNCTIONS
+// ============================================
+
+export const profileService = {
+  async updateProfile(userId, updates) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async uploadProfileImage(userId, file) {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}.${fileExt}`;
+    const filePath = `profiles/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('profile-images')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('profile-images')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
   }
 };
 
@@ -82,46 +111,68 @@ export const authService = {
 // ============================================
 
 export const eventService = {
-  // Get all events with participants
-    async getEvents() {
+  async getEvents() {
     const { data, error } = await supabase
-        .from('events')
-        .select(`
+      .from('events')
+      .select(`
         *,
+        event_categories(category),
         event_participants(
-            user_id,
-            profiles(name)
+          user_id,
+          profiles(name, profile_image_url)
         )
-        `)
-        .order('date', { ascending: true });
+      `)
+      .order('date', { ascending: true });
 
     if (error) throw error;
     
-    // Transform data to include participant names
     return data.map(event => ({
-        ...event,
-        participants: event.event_participants?.map(ep => ep.profiles.name) || []
+      ...event,
+      categories: event.event_categories?.map(ec => ec.category) || [],
+      participants: event.event_participants?.map(ep => ({
+        id: ep.user_id,
+        name: ep.profiles.name,
+        image: ep.profiles.profile_image_url
+      })) || []
     }));
-    },
+  },
 
-  // Create new event (admin only)
   async createEvent(eventData) {
     const { data: { user } } = await supabase.auth.getUser();
     
-    const { data, error } = await supabase
+    const { data: event, error } = await supabase
       .from('events')
       .insert([{
-        ...eventData,
+        title: eventData.title,
+        date: eventData.date,
+        end_date: eventData.end_date || eventData.date,
+        time: eventData.time,
+        location: eventData.location,
+        description: eventData.description,
         created_by: user.id
       }])
       .select()
       .single();
 
     if (error) throw error;
-    return data;
+
+    // Add categories
+    if (eventData.categories && eventData.categories.length > 0) {
+      const categoryInserts = eventData.categories.map(cat => ({
+        event_id: event.id,
+        category: cat
+      }));
+
+      const { error: catError } = await supabase
+        .from('event_categories')
+        .insert(categoryInserts);
+
+      if (catError) throw catError;
+    }
+
+    return event;
   },
 
-  // Update event (admin only)
   async updateEvent(eventId, updates) {
     const { data, error } = await supabase
       .from('events')
@@ -134,7 +185,6 @@ export const eventService = {
     return data;
   },
 
-  // Delete event (admin only)
   async deleteEvent(eventId) {
     const { error } = await supabase
       .from('events')
@@ -144,7 +194,6 @@ export const eventService = {
     if (error) throw error;
   },
 
-  // Join event
   async joinEvent(eventId) {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -161,7 +210,6 @@ export const eventService = {
     return data;
   },
 
-  // Leave event
   async leaveEvent(eventId) {
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -174,7 +222,40 @@ export const eventService = {
     if (error) throw error;
   },
 
-  // Subscribe to event changes
+  async addParticipant(eventId, userId) {
+    const { data, error } = await supabase
+      .from('event_participants')
+      .insert([{
+        event_id: eventId,
+        user_id: userId
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async removeParticipant(eventId, userId) {
+    const { error } = await supabase
+      .from('event_participants')
+      .delete()
+      .eq('event_id', eventId)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+  },
+
+  async getAllUsers() {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, name, profile_image_url')
+      .order('name');
+
+    if (error) throw error;
+    return data;
+  },
+
   subscribeToEvents(callback) {
     return supabase
       .channel('events_channel')
@@ -184,6 +265,10 @@ export const eventService = {
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'event_participants' },
+        callback
+      )
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'event_categories' },
         callback
       )
       .subscribe();
