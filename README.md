@@ -3,7 +3,7 @@ https://sg-jumprope-app.vercel.app/
 
 ## Features
 1. View events, see what is it about, who is involved etc
-if u have reccs lmk <3
+*if u have reccs lmk <3
 
 ## User access
 1. Sign up, can ignore the verification email for now i havent fixed it yet
@@ -19,7 +19,8 @@ if u have reccs lmk <3
 - ui everything i will fix (maybe.. i hope i do)
 - everything above
 - change name/logo etc
-* if u want admin access to test lmk !
+
+- if u want admin access to test lmk !
 
 
 ### installation guide (dev)
