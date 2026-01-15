@@ -53,36 +53,36 @@ export default function EventsView({
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
-          {showMyEventsOnly ? 'My Events' : 'Upcoming Events'}
-        </h2>
-        
-        <div className="flex gap-2">
-          {/* Filter Toggle */}
-          <button
-            onClick={() => setShowMyEventsOnly(!showMyEventsOnly)}
-            className={`px-4 py-2 rounded-md flex items-center text-sm font-medium transition ${
-              showMyEventsOnly
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            {showMyEventsOnly ? 'Show All Events' : 'My Events Only'}
-          </button>
-
-          {/* Create Event Button */}
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+            {showMyEventsOnly ? 'My Events' : 'Upcoming Events'}
+          </h2>
+          
+          {/* Create Event Button (Desktop & Mobile) */}
           {isAdmin && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 flex items-center"
+              className="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-md hover:bg-blue-700 flex items-center text-sm sm:text-base"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Create Event
+              <Plus className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Create Event</span>
             </button>
           )}
         </div>
+        
+        {/* Filter Toggle */}
+        <button
+          onClick={() => setShowMyEventsOnly(!showMyEventsOnly)}
+          className={`w-full sm:w-auto px-4 py-2 rounded-md flex items-center justify-center text-sm font-medium transition ${
+            showMyEventsOnly
+              ? 'bg-blue-600 text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <Filter className="w-4 h-4 mr-2" />
+          {showMyEventsOnly ? 'Show All Events' : 'My Events Only'}
+        </button>
       </div>
 
       {filteredEvents.length === 0 ? (
@@ -102,7 +102,7 @@ export default function EventsView({
           )}
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {filteredEvents.map((event) => (
             <div key={event.id} className="relative">
               <EventCard
@@ -117,10 +117,10 @@ export default function EventsView({
               {isAdmin && (
                 <button
                   onClick={() => setSelectedEventForManage(event)}
-                  className="absolute top-2 right-2 bg-white shadow-md hover:shadow-lg p-2 rounded-full text-gray-600 hover:text-blue-600 transition"
-                  title="Manage participants"
+                  className="absolute top-2 right-2 bg-purple-600 hover:bg-purple-700 shadow-lg hover:shadow-xl p-2 rounded-full text-white transition"
+                  title="Add/Remove participants"
                 >
-                  <UserPlus className="w-4 h-4" />
+                  <UserPlus className="w-5 h-5" />
                 </button>
               )}
             </div>

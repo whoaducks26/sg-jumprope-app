@@ -16,10 +16,18 @@ function App() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600 mb-2">Loading...</p>
+          <p className="text-sm text-gray-500">This might take a moment on first load</p>
+          
+          {/* Timeout warning after 5 seconds */}
+          <div className="mt-4 max-w-md">
+            <p className="text-xs text-gray-400">
+              Taking too long? Try refreshing the page or check your internet connection.
+            </p>
+          </div>
         </div>
       </div>
     );

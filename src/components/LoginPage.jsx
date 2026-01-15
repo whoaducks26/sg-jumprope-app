@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 
 export default function LoginPage() {
@@ -12,11 +12,25 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  const handleSubmit = async () => {
+  // Quick login function for testing
+  const quickLogin = (email, password) => {
+    setFormData({ email, password, name: '' });
+    setError('');
+    setMessage('');
+    // Auto-submit after a brief moment
+    setTimeout(() => {
+      handleSubmit(email, password);
+    }, 100);
+  };
+
+  const handleSubmit = async (emailOverride, passwordOverride) => {
     setError('');
     setMessage('');
 
-    if (!formData.email || !formData.password) {
+    const email = emailOverride || formData.email;
+    const password = passwordOverride || formData.password;
+
+    if (!email || !password) {
       setError('Please fill in all fields');
       return;
     }
@@ -27,7 +41,7 @@ export default function LoginPage() {
     }
 
     if (isSignUp) {
-      const result = await signUp(formData.email, formData.password, formData.name);
+      const result = await signUp(email, password, formData.name);
       if (result.success) {
         setMessage('Account created! Please check your email to verify your account.');
         setFormData({ email: '', password: '', name: '' });
@@ -35,7 +49,7 @@ export default function LoginPage() {
         setError(result.error);
       }
     } else {
-      const result = await signIn(formData.email, formData.password);
+      const result = await signIn(email, password);
       if (!result.success) {
         setError(result.error);
       }
@@ -106,12 +120,36 @@ export default function LoginPage() {
           )}
 
           <button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={loading}
             className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Loading...' : (isSignUp ? 'Sign Up' : 'Sign In')}
           </button>
+        </div>
+
+        {/* Quick Login Buttons (Testing Only) */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <p className="text-xs text-gray-500 mb-3 text-center font-medium">Quick Login (Testing Only)</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => quickLogin('admin1@admin.com', 'admin123')}
+              disabled={loading || isSignUp}
+              className="px-3 py-2 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              🔑 Admin
+            </button>
+            <button
+              onClick={() => quickLogin('user1@user.com', 'user123')}
+              disabled={loading || isSignUp}
+              className="px-3 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              👤 User
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-2 text-center">
+            These buttons will be removed in production
+          </p>
         </div>
 
         <div className="mt-6 text-center">
