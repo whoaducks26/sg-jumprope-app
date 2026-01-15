@@ -7,6 +7,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [updating, setUpdating] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadUsers();
@@ -15,72 +16,32 @@ export default function UserManagement() {
   const loadUsers = async () => {
     try {
       setLoading(true);
+      setError(null);
       
-      // Get all users from auth
-      const { data: authData, error: authError } = await supabase.auth.admin.listUsers();
-      
-      if (authError) {
-        // Fallback: get from profiles if admin API not available
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .order('created_at', { ascending: false });
+      // Simple approach: Just get profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, name, role, created_at, profile_image_url')
+        .order('created_at', { ascending: false });
 
-        if (profileError) throw profileError;
-
-        // Also get emails from auth.users (if we have access)
-        const { data: authUsers } = await supabase
-          .from('auth.users')
-          .select('id, email');
-
-        // Merge data
-        const merged = profileData.map(profile => {
-          const authUser = authUsers?.find(au => au.id === profile.id);
-          return {
-            id: profile.id,
-            email: authUser?.email || 'N/A',
-            name: profile.name,
-            role: profile.role,
-            created_at: profile.created_at,
-            profile_image_url: profile.profile_image_url
-          };
-        });
-
-        setUsers(merged);
-      } else {
-        // Use admin API data
-        const usersWithProfiles = await Promise.all(
-          authData.users.map(async (user) => {
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', user.id)
-              .single();
-
-            return {
-              id: user.id,
-              email: user.email,
-              name: profile?.name || 'N/A',
-              role: profile?.role || 'user',
-              created_at: user.created_at,
-              profile_image_url: profile?.profile_image_url
-            };
-          })
-        );
-
-        setUsers(usersWithProfiles);
+      if (profileError) {
+        console.error('Error fetching profiles:', profileError);
+        throw profileError;
       }
+
+      // Format the data
+      const formattedUsers = profileData.map(profile => ({
+        ...profile,
+        email: 'Email hidden', // We can't easily get emails from profiles table
+        name: profile.name || 'No name',
+        role: profile.role || 'user'
+      }));
+
+      setUsers(formattedUsers);
     } catch (error) {
       console.error('Error loading users:', error);
-      // Simple fallback - just get profiles
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (data) {
-        setUsers(data.map(p => ({ ...p, email: 'Hidden' })));
-      }
+      setError('Failed to load users. Please try refreshing.');
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -127,11 +88,36 @@ export default function UserManagement() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="bg-red-50 text-red-600 px-4 py-3 rounded-md mb-4 inline-block">
+          {error}
+        </div>
+        <button
+          onClick={loadUsers}
+          className="block mx-auto bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">User Management</h2>
-        <p className="text-gray-600">Manage user roles and permissions</p>
+      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">User Management</h2>
+          <p className="text-gray-600">Manage user roles and permissions</p>
+        </div>
+        <button
+          onClick={loadUsers}
+          disabled={loading}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition disabled:opacity-50 text-sm"
+        >
+          Refresh
+        </button>
       </div>
 
       {/* Stats */}

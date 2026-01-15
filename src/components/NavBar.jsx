@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Calendar, Settings, LogOut, User, Users, Menu, X } from 'lucide-react';
 
-export default function Navbar({ user, isAdmin, view, setView, onLogout }) {
+export default function Navbar({ user, isAdmin, onLogout }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const isActive = (path) => location.pathname === path;
 
-  const NavButton = ({ onClick, active, icon: Icon, label, adminOnly }) => {
+  const NavButton = ({ path, icon: Icon, label, adminOnly }) => {
     if (adminOnly && !isAdmin) return null;
     
     return (
       <button
         onClick={() => {
-          onClick();
+          navigate(path);
           setMobileMenuOpen(false);
         }}
         className={`px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 ${
-          active
+          isActive(path)
             ? 'bg-blue-100 text-blue-700'
             : 'text-gray-600 hover:bg-gray-100'
         }`}
@@ -36,32 +41,10 @@ export default function Navbar({ user, isAdmin, view, setView, onLogout }) {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-2">
-            <NavButton 
-              onClick={() => setView('events')} 
-              active={view === 'events'} 
-              icon={Calendar} 
-              label="Events" 
-            />
-            <NavButton 
-              onClick={() => setView('admin')} 
-              active={view === 'admin'} 
-              icon={Settings} 
-              label="Admin" 
-              adminOnly 
-            />
-            <NavButton 
-              onClick={() => setView('users')} 
-              active={view === 'users'} 
-              icon={Users} 
-              label="Users" 
-              adminOnly 
-            />
-            <NavButton 
-              onClick={() => setView('profile')} 
-              active={view === 'profile'} 
-              icon={User} 
-              label="Profile" 
-            />
+            <NavButton path="/events" icon={Calendar} label="Events" />
+            <NavButton path="/admin" icon={Settings} label="Admin" adminOnly />
+            <NavButton path="/users" icon={Users} label="Users" adminOnly />
+            <NavButton path="/profile" icon={User} label="Profile" />
 
             {/* User Info */}
             <div className="flex items-center gap-2 ml-4 pl-4 border-l border-gray-200">
@@ -109,34 +92,14 @@ export default function Navbar({ user, isAdmin, view, setView, onLogout }) {
         {mobileMenuOpen && (
           <div className="md:hidden pb-4 border-t border-gray-200 mt-2 pt-2">
             <div className="flex flex-col space-y-2">
-              <NavButton 
-                onClick={() => setView('events')} 
-                active={view === 'events'} 
-                icon={Calendar} 
-                label="Events" 
-              />
+              <NavButton path="/events" icon={Calendar} label="Events" />
               {isAdmin && (
                 <>
-                  <NavButton 
-                    onClick={() => setView('admin')} 
-                    active={view === 'admin'} 
-                    icon={Settings} 
-                    label="Admin Panel" 
-                  />
-                  <NavButton 
-                    onClick={() => setView('users')} 
-                    active={view === 'users'} 
-                    icon={Users} 
-                    label="User Management" 
-                  />
+                  <NavButton path="/admin" icon={Settings} label="Admin Panel" />
+                  <NavButton path="/users" icon={Users} label="User Management" />
                 </>
               )}
-              <NavButton 
-                onClick={() => setView('profile')} 
-                active={view === 'profile'} 
-                icon={User} 
-                label="My Profile" 
-              />
+              <NavButton path="/profile" icon={User} label="My Profile" />
 
               {/* Mobile User Info */}
               <div className="pt-4 mt-4 border-t border-gray-200">
