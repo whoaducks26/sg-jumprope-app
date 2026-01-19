@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Calendar, Settings, LogOut, User, Users, Menu, X } from 'lucide-react';
+import { Calendar, Settings, LogOut, User, Users, Menu, X, Calculator, GraduationCap } from 'lucide-react';
 
 export default function Navbar({ user, isAdmin, onLogout }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -42,6 +42,8 @@ export default function Navbar({ user, isAdmin, onLogout }) {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-2">
             <NavButton path="/events" icon={Calendar} label="Events" />
+            <NavButton path="/tutorials" icon={GraduationCap} label="Tutorials" />
+            <NavButton path="/calculator" icon={Calculator} label="Calculator" />
             <NavButton path="/admin" icon={Settings} label="Admin" adminOnly />
             <NavButton path="/users" icon={Users} label="Users" adminOnly />
             <NavButton path="/profile" icon={User} label="Profile" />
@@ -93,6 +95,8 @@ export default function Navbar({ user, isAdmin, onLogout }) {
           <div className="md:hidden pb-4 border-t border-gray-200 mt-2 pt-2">
             <div className="flex flex-col space-y-2">
               <NavButton path="/events" icon={Calendar} label="Events" />
+              <NavButton path="/tutorials" icon={GraduationCap} label="Tutorials" />
+              <NavButton path="/calculator" icon={Calculator} label="Calculator" />
               {isAdmin && (
                 <>
                   <NavButton path="/admin" icon={Settings} label="Admin Panel" />

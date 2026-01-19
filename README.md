@@ -23,14 +23,27 @@ https://sg-jumprope-app.vercel.app/
 
 ### installation guide (dev)
 this is if ur cloning this into vscode etc & running locally
-1. npm install
+0. install node/npm (recommended: nvm)
+```bash
+curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+nvm install --lts
+```
+
+1. create `.env.local` in the project root:
+```bash
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+```
+
+2. npm install
 2. check for these files:
 ```
   1. tailwind.config.js
   2. postcss.config.js
   3. vite.config.js
 ```
-3. create .env.local (contact me for file content)
 4. check css file has these:
 ```
   @tailwind base;
@@ -38,5 +51,9 @@ this is if ur cloning this into vscode etc & running locally
   @tailwind utilities;
 ```
 5. npm run dev
+open `http://localhost:5173`
+
+### troubleshooting
+- if it gets stuck on "Loading...": check DevTools console + verify `.env.local` has the two `VITE_SUPABASE_*` values above, then restart `npm run dev`
 <br>
 if u want admin access to test lmk !

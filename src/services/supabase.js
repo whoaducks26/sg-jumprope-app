@@ -3,7 +3,35 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const isConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+function ensureConfigured() {
+  if (!isConfigured) {
+    throw new Error(
+      'Supabase is not configured. Missing VITE_SUPABASE_URL and/or VITE_SUPABASE_ANON_KEY.'
+    );
+  }
+}
+
+function fetchWithTimeout(input, init) {
+  const timeoutMs = 10000;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  const upstreamSignal = init?.signal;
+  if (upstreamSignal) {
+    if (upstreamSignal.aborted) controller.abort();
+    else upstreamSignal.addEventListener('abort', () => controller.abort(), { once: true });
+  }
+
+  return fetch(input, { ...(init || {}), signal: controller.signal }).finally(() =>
+    clearTimeout(timeoutId)
+  );
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: { fetch: fetchWithTimeout },
+});
 
 // ============================================
 // AUTH FUNCTIONS
@@ -11,6 +39,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export const authService = {
   async signUp(email, password, name) {
+    ensureConfigured();
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -27,6 +56,7 @@ export const authService = {
   },
 
   async signIn(email, password) {
+    ensureConfigured();
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -37,17 +67,20 @@ export const authService = {
   },
 
   async signOut() {
+    ensureConfigured();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   },
 
   async getSession() {
+    ensureConfigured();
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error) throw error;
     return session;
   },
 
   async getCurrentUser() {
+    ensureConfigured();
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error) throw error;
     
@@ -76,6 +109,7 @@ export const authService = {
 
 export const profileService = {
   async updateProfile(userId, updates) {
+    ensureConfigured();
     const { data, error } = await supabase
       .from('profiles')
       .update(updates)
@@ -88,6 +122,7 @@ export const profileService = {
   },
 
   async uploadProfileImage(userId, file) {
+    ensureConfigured();
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}.${fileExt}`;
     const filePath = `profiles/${fileName}`;
@@ -112,6 +147,7 @@ export const profileService = {
 
 export const eventService = {
   async getEvents() {
+    ensureConfigured();
     const { data, error } = await supabase
       .from('events')
       .select(`
@@ -138,6 +174,7 @@ export const eventService = {
   },
 
   async createEvent(eventData) {
+    ensureConfigured();
     const { data: { user } } = await supabase.auth.getUser();
     
     const { data: event, error } = await supabase
@@ -174,6 +211,7 @@ export const eventService = {
   },
 
   async updateEvent(eventId, updates) {
+    ensureConfigured();
     const { data, error } = await supabase
       .from('events')
       .update(updates)
@@ -186,6 +224,7 @@ export const eventService = {
   },
 
   async deleteEvent(eventId) {
+    ensureConfigured();
     const { error } = await supabase
       .from('events')
       .delete()
@@ -195,6 +234,7 @@ export const eventService = {
   },
 
   async joinEvent(eventId) {
+    ensureConfigured();
     const { data: { user } } = await supabase.auth.getUser();
     
     const { data, error } = await supabase
@@ -211,6 +251,7 @@ export const eventService = {
   },
 
   async leaveEvent(eventId) {
+    ensureConfigured();
     const { data: { user } } = await supabase.auth.getUser();
     
     const { error } = await supabase
@@ -223,6 +264,7 @@ export const eventService = {
   },
 
   async addParticipant(eventId, userId) {
+    ensureConfigured();
     const { data, error } = await supabase
       .from('event_participants')
       .insert([{
@@ -237,6 +279,7 @@ export const eventService = {
   },
 
   async removeParticipant(eventId, userId) {
+    ensureConfigured();
     const { error } = await supabase
       .from('event_participants')
       .delete()
@@ -247,6 +290,7 @@ export const eventService = {
   },
 
   async getAllUsers() {
+    ensureConfigured();
     const { data, error } = await supabase
       .from('profiles')
       .select('id, name, profile_image_url')
@@ -257,6 +301,7 @@ export const eventService = {
   },
 
   subscribeToEvents(callback) {
+    ensureConfigured();
     return supabase
       .channel('events_channel')
       .on('postgres_changes', 
