@@ -8,6 +8,12 @@ import EventsView from './components/EventsView';
 import AdminPanel from './components/AdminPanel';
 import ProfilePage from './components/ProfilePage';
 import UserManagement from './components/UserManagement';
+import FreestyleScoreCalculator from './components/FreestyleScoreCalculator';
+import TutorialsHome from './components/TutorialsHome';
+import TutorialCategory from './components/TutorialCategory';
+import TutorialLevel from './components/TutorialLevel';
+import ReadingHome from './components/ReadingHome';
+import ReadingViewer from './components/ReadingViewer';
 import Footer from './components/Footer';
 
 function AppContent() {
@@ -102,6 +108,18 @@ function AppContent() {
               onProfileUpdate={refreshUser}
             />
           } />
+
+          {/* Freestyle calculator */}
+          <Route path="/calculator" element={<FreestyleScoreCalculator />} />
+
+          {/* Tutorials */}
+          <Route path="/tutorials" element={<TutorialsHome />} />
+          <Route path="/tutorials/:categoryId" element={<TutorialCategory />} />
+          <Route path="/tutorials/:categoryId/level/:levelId" element={<TutorialLevel />} />
+
+          {/* Reading */}
+          <Route path="/reading" element={<ReadingHome />} />
+          <Route path="/reading/:readingId" element={<ReadingViewer />} />
           
           {/* Admin-only routes */}
           <Route path="/admin" element={
